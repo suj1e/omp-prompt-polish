@@ -34,6 +34,12 @@
 - **npm 上的 `@oh-my-pi/pi-coding-agent` 只是类型/开发依赖。** omp 二进制运行时用自己捆绑的同名模块，扩展里的 `@oh-my-pi/*` 导入会被 legacy-pi-compat 重定向到宿主实例，不会因为本地 node_modules 版本细微差异跑出双份模块；peerDependencies 声明 `>=18.13.1 <19` 即可。
 - **Windows 用户 PATH 持久化后当前 shell 不继承。** `setx`/`SetEnvironmentVariable` 只影响新进程；已在跑的会话要子进程里重读 `[Environment]::GetEnvironmentVariable("Path","User")` 拼回 `PATH`。
 
+## 发布（npm）
+
+- **npm 新包名首个版本会进 staged review。** `npm publish` 立即 exit 0，但 registry 上先只出现 `0.0.0-stage` 占位包（README 写着 "awaiting a staged release"），maintainer 已是自己账号；审核通过后（本次约 2 分钟）真实版本才出现且 latest 指向它。不要看到占位包就误判成被抢注。
+- **omp 的插件子命令是 `uninstall`，没有 `unlink`。** `unlink` 是 Tern 的（`tern plugin unlink`），两边记混会白跑一趟。本地 link 与 npm 安装同名时 `omp install` 会被挡，先 `omp plugin uninstall <name>` 再装。
+- **工作流：调试 `omp plugin link .`，交付后切回正式包**（uninstall link → `omp install omp-prompt-polish`），避免长期挂本地 link 测不到用户真实安装路径。验证发布包要开不带 `-e` 的 omp 会话，让插件自动发现加载。
+
 ## 产品迭代（用户反馈）
 
 - 处理中不要显示文字说明，只留转圈图标（title 提示保留"取消润色"）。
