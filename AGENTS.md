@@ -14,6 +14,18 @@ npm test           # bun test
 
 改动代码后必须新开一个 omp 会话验证；运行中的会话不会热加载扩展。
 
+## 开发与发布循环
+
+```sh
+omp plugin link .                    # 开发调试：本地 link，改代码后新开会话即生效
+omp plugin uninstall omp-prompt-polish   # 结束调试：摘掉本地 link（uninstall 同时适用于 link 与 npm 安装）
+omp install omp-prompt-polish        # 日常使用/发布后验证：装正式 npm 包
+```
+
+发版：改 `package.json` 版本 → push main → `git tag vX.Y.Z && git push origin vX.Y.Z`，GitHub Actions 自动跑 check+test 后 `npm publish --provenance`。注意新包名首个版本会先进 npm 的 staged review（registry 上短暂出现 `0.0.0-stage` 占位），审核通过后真实版本才可见。
+
+本地 link 与 npm 安装同名冲突时，`omp install` 会被已存在的 link 挡住；先 `omp plugin uninstall` 再装。判断当前装的是哪种：`omp plugin list` 里 npm Plugins 段显示 `omp-prompt-polish@版本` 即正式包。
+
 ## 架构
 
 - `src/index.ts` — TUI 集成。`ctx.ui.setEditorComponent` 挂一层工厂：优先复用当前聚焦的 `CustomEditor`（保留附件 chips、atoms、宿主接线），链式保留上一个扩展的工厂；在 `describeLayout` 返回的 `omp.composer.bar` 里、send 按钮之前插入原生按钮节点；点击经 `handleNativeEvent` 的 `action` 事件分派。`clearDraft`/`onChange` 挂钩驱动状态。
@@ -34,7 +46,8 @@ npm test           # bun test
 
 ```sh
 tern new tab --cwd <repo> -- <omp.exe> --no-session --no-extensions --no-skills \
-  --no-rules --no-context-files --no-title --no-tools --no-lsp -e <repo>/src/index.ts
+  --no-rules --no-context-files --no-title --no-tools --no-lsp -e <repo>/src/index.ts   # 调试指定版本
+# 或不带 -e（验证发布包路径，插件自动发现）
 tern send <pane> text '草稿内容'
 tern ctl tree '.sf-dock'                  # 查看输入框文本与按钮 title
 tern ctl tree '[data-role="omp.prompt-polish.primary"]'
