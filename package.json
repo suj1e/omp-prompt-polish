@@ -1,9 +1,25 @@
 {
   "name": "omp-prompt-polish",
   "version": "0.1.0",
-  "description": "Polish an omp draft in Tern and switch between the original and polished versions.",
+  "description": "Polish an unsent omp draft from Tern's native composer: one star button, cancel, restore the original.",
   "type": "module",
   "license": "MIT",
+  "author": "suj1e",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/suj1e/omp-prompt-polish.git"
+  },
+  "homepage": "https://github.com/suj1e/omp-prompt-polish#readme",
+  "bugs": "https://github.com/suj1e/omp-prompt-polish/issues",
+  "keywords": [
+    "omp",
+    "oh-my-pi",
+    "tern",
+    "prompt",
+    "polish",
+    "extension",
+    "plugin"
+  ],
   "files": ["src", "README.md", "LICENSE"],
   "omp": { "extensions": ["./src/index.ts"] },
   "scripts": {

@@ -6,19 +6,21 @@
 
 需要 Tern 和 omp 18.13.1 或更新的 18.x。使用 omp 已配置的模型和认证，无需另填 API key。
 
-在项目目录执行：
+从 npm 安装（推荐）：
 
 ```sh
-omp plugin link .
+omp install omp-prompt-polish
 ```
+
+或从 GitHub 安装固定版本：
+
+```sh
+omp install github:suj1e/omp-prompt-polish#v0.1.0
+```
+
+升级时重新执行安装命令。开发者本地开发用 `git clone` 后 `omp plugin link .`，或临时加载 `omp --extension ./src/index.ts`。
 
 安装或更新代码后，退出并重新启动 omp，或打开一个新的 omp 窗格。运行中的进程不会自动加载变更。
-
-仅试用一次：
-
-```sh
-omp --extension ./src/index.ts
-```
 
 ## 使用
 
