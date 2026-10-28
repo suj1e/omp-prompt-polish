@@ -56,6 +56,8 @@ omp install github:suj1e/omp-prompt-polish#v0.1.0
 
 已在 Windows、Tern 0.9.5、omp 18.13.2 上验证按钮点击。macOS 使用相同的 Tern 原生点击接口，但尚未实机验证。
 
+仓库提供 `justfile` 快捷入口（`just --list` 查看）：`just verify`（类型检查+测试）、`just smoke`（真实 UI 冒烟）、`just release 0.2.0`（打 tag 触发自动发布）。
+
 ## 开发
 
 ```sh

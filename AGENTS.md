@@ -4,6 +4,9 @@ omp 提示词润色插件：在 Tern 的 omp 原生输入框发送按钮旁加�
 
 ## 常用命令
 
+优先用 `just`（配方见 `justfile`）：`just verify`（check+test）、`just pack`、`just link` / `just use-package`（开发 link 与正式包切换）、`just smoke`（真实 UI 冒烟）、`just release X.Y.Z`（发版：bump+tag+push，CI 自动 npm publish）。
+
+
 ```sh
 npm install        # 仅安装类型与测试依赖（@oh-my-pi/pi-coding-agent 等）
 npm run check      # tsc --noEmit
