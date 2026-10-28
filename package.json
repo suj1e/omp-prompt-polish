@@ -1,0 +1,22 @@
+{
+  "name": "omp-prompt-polish",
+  "version": "0.1.0",
+  "description": "Polish an omp draft in Tern and switch between the original and polished versions.",
+  "type": "module",
+  "license": "MIT",
+  "files": ["src", "README.md", "LICENSE"],
+  "omp": { "extensions": ["./src/index.ts"] },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "peerDependencies": {
+    "@oh-my-pi/pi-coding-agent": ">=18.13.1 <19"
+  },
+  "devDependencies": {
+    "@oh-my-pi/pi-coding-agent": "18.13.1",
+    "@types/bun": "^1.3.14",
+    "bun": "^1.3.14",
+    "typescript": "^5.9.3"
+  }
+}
