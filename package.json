@@ -1,6 +1,6 @@
 {
   "name": "omp-prompt-polish",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Polish an unsent omp draft from Tern's native composer: one star button, cancel, restore the original.",
   "type": "module",
   "license": "MIT",
@@ -20,8 +20,16 @@
     "extension",
     "plugin"
   ],
-  "files": ["src", "README.md", "LICENSE"],
-  "omp": { "extensions": ["./src/index.ts"] },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "omp": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
   "scripts": {
     "check": "tsc --noEmit",
     "test": "bun test"
