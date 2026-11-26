@@ -11,7 +11,6 @@ const MODE_SIGIL = /^\s*(?:!!?|\$\$?|\?)[ \t]?/;
 interface Look {
   readonly title: string;
   readonly glyph: string;
-  readonly label?: string;
   readonly tone?: "accent" | "muted";
   readonly busy?: boolean;
   readonly clickable: boolean;
@@ -39,14 +38,14 @@ export default function promptPolish(pi: ExtensionAPI): void {
   function look(text: string): Look | undefined {
     if (drafts.working) return { title: "取消润色", glyph: "", busy: true, clickable: true };
     if (drafts.ready) {
-      return { title: "润色已完成 · 点击应用，保留当前原稿", glyph: "✔", label: "应用润色", tone: "accent", clickable: true };
+      return { title: "润色已完成 · 点击应用，保留当前原稿", glyph: "✔", tone: "accent", clickable: true };
     }
-    if (drafts.hasPair) return { title: "恢复原文", glyph: "↶", label: "恢复原文", clickable: true };
+    if (drafts.hasPair) return { title: "恢复原文", glyph: "↶", clickable: true };
     if (!text.trim()) return undefined;
     if (/^\s*\//.test(text) || MODE_SIGIL.test(text)) {
-      return { title: "命令、Shell 输入和语音录入时不可用", glyph: "✦", label: "润色", tone: "muted", clickable: false };
+      return { title: "命令、Shell 输入和语音录入时不可用", glyph: "✦", tone: "muted", clickable: false };
     }
-    return { title: "润色提示词", glyph: "✦", label: "润色", clickable: true };
+    return { title: "润色提示词", glyph: "✦", clickable: true };
   }
 
   async function primary(): Promise<void> {
@@ -79,12 +78,9 @@ export default function promptPolish(pi: ExtensionAPI): void {
             if (act !== ACTION) return;
             void primary().catch(error => context?.ui.notify(error instanceof Error ? error.message : String(error), "error"));
           },
-          children: [
-            state.busy
-              ? jsx("spinner", { key: "busy", style: "dots", tone: "accent" })
-              : jsx("text", { key: "glyph", text: state.glyph, tone }),
-            state.busy ? undefined : jsx("text", { key: "label", text: state.label, tone }),
-          ],
+          children: state.busy
+            ? jsx("spinner", { key: "busy", style: "dots", tone: "accent" })
+            : jsx("text", { key: "glyph", text: `   ${state.glyph}`, tone }),
         }),
       ],
     });
