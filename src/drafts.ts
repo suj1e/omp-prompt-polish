@@ -1,6 +1,5 @@
 export interface DraftSnapshot {
   text: string;
-  revision: string;
 }
 
 export interface DraftPort {
@@ -23,14 +22,6 @@ export class Drafts {
   get working(): boolean { return this.request !== undefined; }
   get ready(): boolean { return this.pending !== undefined; }
   get hasPair(): boolean { return this.original !== undefined; }
-
-  changed(text: string): void {
-    if (this.writing) return;
-    if (!text.trim()) {
-      this.reset();
-      return;
-    }
-  }
 
   reset(): void {
     this.request?.abort.abort();
@@ -58,7 +49,7 @@ export class Drafts {
       const polished = await this.port.generate(snapshot.text, request.abort.signal);
       if (this.request !== request || request.abort.signal.aborted) return;
       const current = this.port.read();
-      if (current.revision === snapshot.revision && current.text === snapshot.text) {
+      if (current.text === snapshot.text) {
         this.original = snapshot.text;
         this.replace(polished);
       } else {

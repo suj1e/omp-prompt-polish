@@ -2,15 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { Drafts } from "../src/drafts.ts";
 
 function scenario(text = "原稿") {
-  let revision = 0;
   let finish!: (text: string) => void;
   let fail!: (error: Error) => void;
   let signal: AbortSignal | undefined;
   const messages: string[] = [];
   let drafts: Drafts;
-  const edit = (next: string) => { text = next; revision++; drafts.changed(text); };
+  const edit = (next: string) => { text = next; };
   drafts = new Drafts({
-    read: () => ({ text, revision: String(revision) }),
+    read: () => ({ text }),
     write: edit,
     generate: (_text, nextSignal) => {
       signal = nextSignal;
@@ -52,20 +51,29 @@ describe("draft pair transitions", () => {
     expect(s.text()).toBe("手改原稿");
   });
 
-  test("an edit and reversal still require explicit application", async () => {
+  test("an edited draft keeps the result pending until applied explicitly", async () => {
+    const s = scenario();
+    const request = s.drafts.polish();
+    s.edit("临时修改");
+    s.finish("润色稿");
+    await request;
+    expect(s.text()).toBe("临时修改");
+    expect(s.drafts.ready).toBe(true);
+    s.drafts.applyOrRestore();
+    expect(s.text()).toBe("润色稿");
+    s.drafts.applyOrRestore();
+    expect(s.text()).toBe("临时修改");
+  });
+
+  test("a draft returned to its snapshot text applies the result", async () => {
     const s = scenario();
     const request = s.drafts.polish();
     s.edit("临时修改");
     s.edit("原稿");
     s.finish("润色稿");
     await request;
-    expect(s.text()).toBe("原稿");
-    expect(s.drafts.ready).toBe(true);
-    s.edit("最新草稿");
-    s.drafts.applyOrRestore();
     expect(s.text()).toBe("润色稿");
-    s.drafts.applyOrRestore();
-    expect(s.text()).toBe("最新草稿");
+    expect(s.drafts.hasPair).toBe(true);
   });
 
   test("a canceled request cannot land after a new request starts", async () => {

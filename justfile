@@ -39,14 +39,14 @@ list:
 # 附加参数原样传给 omp，例如：just smoke --thinking off
 smoke *args:
     tern new tab --cwd "{{justfile_dir()}}" -- omp --no-session --no-extensions --no-skills \
-        --no-rules --no-context-files --no-title --no-tools --no-lsp \
+        --no-rules --no-context-files --no-title --no-lsp \
         -e "{{justfile_dir()}}/src/index.ts" {{args}}
 
 # 发版：verify 通过后 bump 版本、打 tag 并推送，GitHub Actions 自动发布到 npm。
 # 用法：just release 0.2.0
 release VERSION: verify
     npm version {{VERSION}} --no-git-tag-version
-    git add package.json
+    git add package.json package-lock.json
     git commit -m "chore: release v{{VERSION}}"
     git tag "v{{VERSION}}"
     git push origin main "v{{VERSION}}"

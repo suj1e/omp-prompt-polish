@@ -4,17 +4,23 @@
 
 ## Tern 原生输入框集成
 
-- **想往 composer 工具栏加按钮，没有现成扩展点。** `ctx.ui.setWidget` 只能渲染在输入框上方/下方占一整行；`registerComposerShape` 只是外观布局。可行路径是 `ctx.ui.setEditorComponent` 挂自定义编辑器工厂，在 `CustomEditor.describeLayout` 返回的布局里找到 `role: "omp.composer.bar"` 的 row，把按钮节点插到 `omp.composer.send` 之前；点击以 `handleNativeEvent` 收到 `{type:"action", act}` 结束。v18.13.1 源码 `packages/tui/src/prompt/custom-editor.ts` 的 `describeLayout` 是权威。
-- **编辑器工厂必须复用当前编辑器，不能 new。** `setEditorComponent` 换编辑器时宿主只保留文本（`setText(previousText)`），附件 chips、atoms、各种宿主接线都会丢。工厂里先 `tui.getFocused()`，是 `CustomEditor` 就直接用；同时用 `ctx.ui.getEditorComponent()` 链式保留上一个扩展的工厂，避免覆盖别人的编辑器。
-- **`onChange` 要在工厂返回之后再挂。** 宿主在 `setEditorComponent` 内部同步调用工厂并做一系列接线，工厂内挂的钩子可能被后续赋值覆盖；`install()` 里工厂调用完、拿到 `editor` 引用后再包装 `onChange` 最稳。
+- **（omp 18，0.1.0 适用）想往 composer 工具栏加按钮，没有现成扩展点。** `ctx.ui.setWidget` 只能渲染在输入框上方/下方占一整行；`registerComposerShape` 只是外观布局。可行路径是 `ctx.ui.setEditorComponent` 挂自定义编辑器工厂，在 `CustomEditor.describeLayout` 返回的布局里找到 `role: "omp.composer.bar"` 的 row，把按钮节点插到 `omp.composer.send` 之前；点击以 `handleNativeEvent` 收到 `{type:"action", act}` 结束。v18.13.1 源码 `packages/tui/src/prompt/custom-editor.ts` 的 `describeLayout` 是权威。
+- **（omp 18，0.1.0 适用）编辑器工厂必须复用当前编辑器，不能 new。** `setEditorComponent` 换编辑器时宿主只保留文本（`setText(previousText)`），附件 chips、atoms、各种宿主接线都会丢。工厂里先 `tui.getFocused()`，是 `CustomEditor` 就直接用；同时用 `ctx.ui.getEditorComponent()` 链式保留上一个扩展的工厂，避免覆盖别人的编辑器。
+- **（omp 18，0.1.0 适用）`onChange` 要在工厂返回之后再挂。** 宿主在 `setEditorComponent` 内部同步调用工厂并做一系列接线，工厂内挂的钩子可能被后续赋值覆盖；`install()` 里工厂调用完、拿到 `editor` 引用后再包装 `onChange` 最稳。
 - **spinner 带 label 会在界面渲染出一行文字。** 原生 `spinner` 节点的 `label` 是可见文案不是无障碍标签，做纯图标进度时不要传。
 - **扩展只在会话启动时加载。** 改完代码必须新开 omp 会话；`--no-extensions` 只关自动发现，`-e` 显式路径仍然生效。
+
+## omp 19 迁移（0.2.0）
+
+- **omp 19 移除了自定义编辑器入口。** 19.2.0 删除 `ctx.ui.setEditorComponent`/`getEditorComponent`，`handleNativeEvent` 随扩展渲染迁移一并消失；composer 只剩 `addKeyHandler`/`addDecorator`/`setSubmitTransform`/`setShape`，工具栏没有扩展插入点。0.2.0 改用 `ctx.ui.setWidget(key, factory, { placement: "belowEditor" })`：节点用 `@oh-my-pi/pi-tui` 的 `jsx()` 构建，`actions.click` + `onAction` 收点击；`addDecorator` 观察草稿编辑，状态或文本变化后重设同一个 widget key 重绘。`registerComposerShape` 只返回字符串行，放不了可点击控件。
+- **19 不再向扩展暴露草稿 revision、atoms 和 composerState。** 只有 `ui.getEditorText()`/`ui.setEditorText()`；并发保护改为文本快照相等判断，附件 chip 依赖 `protectDraft` 的通用标记正则保护。副作用：润色期间改回原文相同文本会直接应用结果，不再转 pending。命令/Shell 模式改由文本前缀判断，子代理视图和录音状态无法再检测。
+- **`--no-tools` 与 `-e` 互斥。** omp 19 的 `--no-tools` 会禁用扩展加载，`-e` 也不能与它同用；冒烟命令不能再带 `--no-tools`。
 
 ## 草稿与附件
 
 - **`Editor.setText` 会清空 undo 历史。** "恢复原文"必须自己存快照；依赖 Ctrl+Z 一定丢。也正因此，润色写回后用户没法用撤销回到润色前，快照是唯一途径。
 - **附件在草稿里是原子 chip token（`atoms: label → expansion`）。** 直接把草稿文本发给模型，模型改写或移动 token 就会丢附件；expansion（文件内容、base64）更不能发。做法：label 替换为 `[[OMP_POLISH_N:K]]` 占位符，回复严格校验"每个占位符恰好出现一次且顺序一致"后再还原，任何丢失/重复/篡改直接拒绝写回。草稿里用户自己写了同形占位符也要兼容（namespace 递增）。
-- **并发保护用两个身份。** 请求身份：`AbortController` 引用相等，防取消/重置后迟到结果落地。草稿身份：`textRevision:atomsRevision` 组合，润色期间用户改过草稿就不直接覆盖，转 pending 等用户显式应用（应用时当前最新草稿保存为可恢复原文）。
+- **并发保护用两个身份。** 请求身份：`AbortController` 引用相等，防取消/重置后迟到结果落地。草稿身份：omp 18 用 `textRevision:atomsRevision`，omp 19 只能比较文本；润色期间用户改成不同草稿就不直接覆盖，转 pending 等用户显式应用（应用时当前最新草稿保存为可恢复原文）。
 
 ## 模型调用
 
