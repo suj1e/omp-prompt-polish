@@ -90,7 +90,7 @@ export default function promptPolish(pi: ExtensionAPI): void {
   function refresh(): void {
     const ctx = context;
     if (!ctx?.ui.composer) return;
-    ctx.ui.setWidget(WIDGET, (_ui, theme) => view(theme), { placement: "belowEditor" });
+    ctx.ui.setWidget(WIDGET, (_ui, theme) => view(theme), { placement: "aboveEditor" });
   }
 
   /** An emptied draft ends the restore pair; the decorator runs inside a paint, so defer the reset. */
