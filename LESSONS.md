@@ -14,6 +14,7 @@
 
 - **omp 19 移除了自定义编辑器入口。** 19.2.0 删除 `ctx.ui.setEditorComponent`/`getEditorComponent`，`handleNativeEvent` 随扩展渲染迁移一并消失；composer 只剩 `addKeyHandler`/`addDecorator`/`setSubmitTransform`/`setShape`，工具栏没有扩展插入点。0.2.0 改用 `ctx.ui.setWidget(key, factory, { placement: "belowEditor" })`：节点用 `@oh-my-pi/pi-tui` 的 `jsx()` 构建，`actions.click` + `onAction` 收点击；`addDecorator` 观察草稿编辑，状态或文本变化后重设同一个 widget key 重绘。`registerComposerShape` 只返回字符串行，放不了可点击控件。
 - **19 不再向扩展暴露草稿 revision、atoms 和 composerState。** 只有 `ui.getEditorText()`/`ui.setEditorText()`；并发保护改为文本快照相等判断，附件 chip 依赖 `protectDraft` 的通用标记正则保护。副作用：润色期间改回原文相同文本会直接应用结果，不再转 pending。命令/Shell 模式改由文本前缀判断，子代理视图和录音状态无法再检测。
+- **`setWidget` 的每个 key 是 composer 下方独立的一行，不是共享工具栏。** 多个插件各加按钮会纵向叠行；19.2 没有合并成一条 bar 的扩展点。常驻按钮（空草稿置灰）能避免打字时布局跳动。
 - **`aboveEditor` 的 widget 会被 Tern 的 context meter 盖住。** 19.2 把 `placement: "aboveEditor"` 画在输入框上方同一条带里，Tern 的 context meter（`.sf.sf-meter.sf-act`，左右都有 `sf-mt-*` 文本）在它上面，`tern ctl pick` 命中的是 meter 而不是按钮，点击不会进 `onAction`；左右对齐都一样。`belowEditor` 的命中区是按钮自己的 `sf-text`，点击可靠。往 composer 上方放控件前先用 `tern ctl pick X Y` 验证命中元素。
 - **`--no-tools` 与 `-e` 互斥。** omp 19 的 `--no-tools` 会禁用扩展加载，`-e` 也不能与它同用；冒烟命令不能再带 `--no-tools`。
 

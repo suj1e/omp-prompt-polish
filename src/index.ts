@@ -35,13 +35,13 @@ export default function promptPolish(pi: ExtensionAPI): void {
     notify: (message, type) => context?.ui.notify(message, type),
   });
 
-  function look(text: string): Look | undefined {
+  function look(text: string): Look {
     if (drafts.working) return { title: "取消润色", glyph: "", busy: true, clickable: true };
     if (drafts.ready) {
       return { title: "润色已完成 · 点击应用，保留当前原稿", glyph: "✔", tone: "accent", clickable: true };
     }
     if (drafts.hasPair) return { title: "恢复原文", glyph: "↶", clickable: true };
-    if (!text.trim()) return undefined;
+    if (!text.trim()) return { title: "输入提示词后润色", glyph: "✦", tone: "muted", clickable: false };
     if (/^\s*\//.test(text) || MODE_SIGIL.test(text)) {
       return { title: "命令、Shell 输入和语音录入时不可用", glyph: "✦", tone: "muted", clickable: false };
     }
@@ -50,14 +50,13 @@ export default function promptPolish(pi: ExtensionAPI): void {
 
   async function primary(): Promise<void> {
     if (drafts.working) { drafts.cancel(); return; }
-    if (!look(context?.ui.getEditorText() ?? "")?.clickable) return;
+    if (!look(context?.ui.getEditorText() ?? "").clickable) return;
     if (drafts.ready || drafts.hasPair) drafts.applyOrRestore();
     else await drafts.polish();
   }
 
-  function view(theme: ExtensionTheme): JSXNode {
+  function view(): JSXNode {
     const state = look(context?.ui.getEditorText() ?? "");
-    if (!state) return jsx("col", { hidden: true });
     const tone = state.tone;
     return jsx("row", {
       role: WIDGET,
@@ -90,7 +89,7 @@ export default function promptPolish(pi: ExtensionAPI): void {
   function refresh(): void {
     const ctx = context;
     if (!ctx?.ui.composer) return;
-    ctx.ui.setWidget(WIDGET, (_ui, theme) => view(theme), { placement: "belowEditor" });
+    ctx.ui.setWidget(WIDGET, () => view(), { placement: "belowEditor" });
   }
 
   /** An emptied draft ends the restore pair; the decorator runs inside a paint, so defer the reset. */
