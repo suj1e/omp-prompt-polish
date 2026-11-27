@@ -1,6 +1,6 @@
 {
   "name": "omp-prompt-polish",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Polish an unsent omp draft from Tern's native composer: one star button, cancel, restore the original.",
   "type": "module",
   "license": "MIT",

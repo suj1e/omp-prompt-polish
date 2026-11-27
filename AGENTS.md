@@ -1,6 +1,6 @@
 # AGENTS.md
 
-omp 提示词润色插件：在 Tern 的 omp 输入框上方挂一个星形润色按钮，点击润色当前未发送草稿，可取消、可恢复原文。UI 文案使用中文。
+omp 提示词润色插件：在 Tern 的 omp 输入框下方挂一个星形润色按钮，点击润色当前未发送草稿，可取消、可恢复原文。UI 文案使用中文。
 
 ## 常用命令
 
@@ -31,7 +31,7 @@ omp install omp-prompt-polish        # 日常使用/发布后验证：装正式 
 
 ## 架构
 
-- `src/index.ts` — TUI 集成。omp 19 移除了 `setEditorComponent`/`handleNativeEvent`，composer 工具栏不再有扩展插入点；改为 `ctx.ui.setWidget(key, factory, { placement: "aboveEditor" })` 在输入框上方画一行按钮。节点用 `@oh-my-pi/pi-tui` 的 `jsx()` 构建，`actions.click` + `onAction` 收点击；`composer.addDecorator` 观察草稿编辑（空草稿结束恢复对），每次状态变化或文本变化后用 `setWidget` 重设同一 key 触发重绘。
+- `src/index.ts` — TUI 集成。omp 19 移除了 `setEditorComponent`/`handleNativeEvent`，composer 工具栏不再有扩展插入点；改为 `ctx.ui.setWidget(key, factory, { placement: "belowEditor" })` 在输入框下方画一行按钮。节点用 `@oh-my-pi/pi-tui` 的 `jsx()` 构建，`actions.click` + `onAction` 收点击；`composer.addDecorator` 观察草稿编辑（空草稿结束恢复对），每次状态变化或文本变化后用 `setWidget` 重设同一 key 触发重绘。
 - `src/drafts.ts` — 润色状态机（working / pending / original 快照）。请求身份（AbortController 引用）+ 草稿文本快照防止迟到结果覆盖用户输入；润色期间草稿被改成不同文本时结果进入 pending，需显式点击应用（19 不再暴露 revision，改回原文相同文本会直接应用）。
 - `src/inference.ts` — `completeSimple` + 自建 Context（只含 system 指令与草稿），认证用 `ctx.modelRegistry.resolver(model, sessionId)`。`protectDraft` 把代码块、附件 chip（`[Image #N]`/`📄 #N` 等标记）、URL/路径替换为 `[[OMP_POLISH_N:K]]` 占位符，`restore` 严格校验数量/顺序后还原；chip 的 expansion 永不发给模型。
 - `src/history.ts` — 从 `sessionManager.getLeafEntry()` 沿 `parentId` 回溯当前分支，取最近 6 条 user/已完成的 assistant 文本（总 12k / 单条 4k 字符预算，优先最新）。
